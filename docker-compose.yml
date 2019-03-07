@@ -1,0 +1,40 @@
+version: '3'
+services:
+  postgres:
+    image: 'postgres:latest'
+  redis:
+    image: 'redis:latest'
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - '3050:80'
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server
+    # volumes: (this part doesn't work on local machine)
+    #   - /app/node_modules #skip tracking to node modules
+    #   - ./server:/app #any changes in the server code should sync to cotainer /app folder.
+    environment: #this is location wherein we will set the values of the environment variable as defined in the keys.js
+      - REDIS_HOST=redis #its the name of the services section redis container
+      - REDIS_PORT=6379 #this is the default port of redis (can also be found in the docker hub redis)
+      #all the postgres below settings are default settings provided by postgres. only the PGHost should be taken from services section
+      # of this file
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password 
+      - PGPORT=5432 #default port of postgress
+  client:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+      # not adding the volumes part as it should be same as server
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+      # not adding the volumes part as it should be same as server
